@@ -1,11 +1,12 @@
 import { useState, useRef, useEffect } from "react";
 import axios from "axios";
 import { useDebouncedCallback } from "use-debounce";
+import store from "../store/configureStore";
 
 import FeesTable from "./FeesTable";
-function Conversion() {
+function Conversion({ originAmount }) {
   const originAmountInputRef = useRef(null);
-  const [originAmount, setOriginAmount] = useState("0.00");
+  // const [originAmount, setOriginAmount] = useState("0.00");
   const [destinationAmount, setDestinationAmount] = useState("0.00");
   const [originCurrency, setOriginCurrency] = useState("USD");
   const [destinationCurrency, setDestinationCurrency] = useState("EUR");
@@ -61,7 +62,11 @@ function Conversion() {
             xRate: newConversionRate,
           } = resp || {};
           if (changedField.includes("destinationAmount")) {
-            setOriginAmount(newOriginAmount);
+            // setOriginAmount(newOriginAmount);
+            store.dispatch({
+              type: "SET_ORIGIN_AMT",
+              data: newOriginAmount,
+            });
           } else {
             setDestinationAmount(newDestinationAmount);
           }
@@ -101,7 +106,11 @@ function Conversion() {
     console.log({ name, value });
     switch (name) {
       case "originAmount":
-        setOriginAmount(value);
+        // setOriginAmount(value);
+        store.dispatch({
+          type: "SET_ORIGIN_AMT",
+          data: value,
+        });
         break;
       case "destinationAmount":
         setDestinationAmount(value);
