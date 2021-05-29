@@ -1,10 +1,10 @@
 import { useState, useRef, useEffect } from "react";
 import axios from "axios";
 import { useDebouncedCallback } from "use-debounce";
-import store from "../store/configureStore";
+import { connect } from "react-redux";
 
 import FeesTable from "./FeesTable";
-function Conversion({ originAmount }) {
+function Conversion({ originAmount, dispatch }) {
   const originAmountInputRef = useRef(null);
   // const [originAmount, setOriginAmount] = useState("0.00");
   const [destinationAmount, setDestinationAmount] = useState("0.00");
@@ -63,7 +63,7 @@ function Conversion({ originAmount }) {
           } = resp || {};
           if (changedField.includes("destinationAmount")) {
             // setOriginAmount(newOriginAmount);
-            store.dispatch({
+            dispatch({
               type: "SET_ORIGIN_AMT",
               data: newOriginAmount,
             });
@@ -107,7 +107,7 @@ function Conversion({ originAmount }) {
     switch (name) {
       case "originAmount":
         // setOriginAmount(value);
-        store.dispatch({
+        dispatch({
           type: "SET_ORIGIN_AMT",
           data: value,
         });
@@ -204,4 +204,9 @@ function Conversion({ originAmount }) {
   );
 }
 
-export default Conversion;
+export default connect((state, props) => {
+  const { originAmount } = state;
+  return {
+    originAmount,
+  };
+})(Conversion);
