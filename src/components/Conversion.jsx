@@ -103,7 +103,6 @@ function Conversion({ originAmount, dispatch }) {
 
   function handleChange(e) {
     const { name, value } = e.target;
-    console.log({ name, value });
     switch (name) {
       case "originAmount":
         // setOriginAmount(value);
