@@ -1,4 +1,5 @@
-import { createStore } from "redux";
+import { createStore, applyMiddleware } from "redux";
+import logger from "redux-logger";
 
 const defaultState = {
   originAmount: "0.00",
@@ -16,6 +17,6 @@ function amount(state = defaultState, action) {
   }
 }
 
-const store = createStore(amount);
+const store = createStore(amount, applyMiddleware(logger));
 
 export default store;
