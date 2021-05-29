@@ -7,6 +7,8 @@ const logger = createLogger({
 });
 const defaultState = {
   originAmount: "0.00",
+  destinationAmount: "0.00",
+  conversionRate: 1.5,
 };
 
 function amount(state = defaultState, action) {
@@ -15,6 +17,12 @@ function amount(state = defaultState, action) {
       return {
         ...state,
         originAmount: action.data,
+      };
+    case "REC_CONVERSION":
+      return {
+        ...state,
+        conversionRate: action.data.xRate,
+        destinationAmount: action.data.destAmount,
       };
     default:
       return state;

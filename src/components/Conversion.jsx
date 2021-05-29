@@ -4,13 +4,18 @@ import { useDebouncedCallback } from "use-debounce";
 import { connect } from "react-redux";
 
 import FeesTable from "./FeesTable";
-function Conversion({ originAmount, dispatch }) {
+function Conversion({
+  originAmount,
+  destinationAmount,
+  conversionRate,
+  dispatch,
+}) {
   const originAmountInputRef = useRef(null);
   // const [originAmount, setOriginAmount] = useState("0.00");
-  const [destinationAmount, setDestinationAmount] = useState("0.00");
+  // const [destinationAmount, setDestinationAmount] = useState("0.00");
   const [originCurrency, setOriginCurrency] = useState("USD");
   const [destinationCurrency, setDestinationCurrency] = useState("EUR");
-  const [conversionRate, setConversionRate] = useState(1.5);
+  // const [conversionRate, setConversionRate] = useState(1.5);
   const [changedField, setChangedField] = useState("");
   const [feeAmount, setFeeAmount] = useState(0.0);
   const [totalCost, setTotalCost] = useState(0.0);
@@ -41,40 +46,44 @@ function Conversion({ originAmount, dispatch }) {
   }, []);
 
   useEffect(() => {
-    if (changedField) {
-      setChangedField("");
-      const payload = {
-        originAmount: originAmount,
-        destAmount: destinationAmount,
-        originCurrency: originCurrency,
-        destCurrency: destinationCurrency,
-        calcOriginAmount: changedField.includes("destinationAmount"),
-      };
-      makeConversionAjaxCall(
-        payload,
-        (resp) => {
-          if (errorMsg) {
-            setErrorMsg("");
-          }
-          const {
-            originAmount: newOriginAmount,
-            destAmount: newDestinationAmount,
-            xRate: newConversionRate,
-          } = resp || {};
-          if (changedField.includes("destinationAmount")) {
-            // setOriginAmount(newOriginAmount);
-            dispatch({
-              type: "SET_ORIGIN_AMT",
-              data: newOriginAmount,
-            });
-          } else {
-            setDestinationAmount(newDestinationAmount);
-          }
-          setConversionRate(newConversionRate);
-        },
-        handleAjaxFailure
-      );
-    }
+    dispatch((dispatch) => {
+      if (changedField) {
+        setChangedField("");
+        const payload = {
+          originAmount: originAmount,
+          destAmount: destinationAmount,
+          originCurrency: originCurrency,
+          destCurrency: destinationCurrency,
+          calcOriginAmount: changedField.includes("destinationAmount"),
+        };
+        dispatch({ type: "REQ_CONVERSION", data: payload });
+        makeConversionAjaxCall(
+          payload,
+          (resp) => {
+            dispatch({ type: "REC_CONVERSION", data: resp });
+            if (errorMsg) {
+              setErrorMsg("");
+            }
+            const {
+              originAmount: newOriginAmount,
+              destAmount: newDestinationAmount,
+              xRate: newConversionRate,
+            } = resp || {};
+            if (changedField.includes("destinationAmount")) {
+              // setOriginAmount(newOriginAmount);
+              dispatch({
+                type: "SET_ORIGIN_AMT",
+                data: newOriginAmount,
+              });
+            } else {
+              // setDestinationAmount(newDestinationAmount);
+            }
+            // setConversionRate(newConversionRate);
+          },
+          handleAjaxFailure
+        );
+      }
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [changedField]);
 
@@ -112,7 +121,7 @@ function Conversion({ originAmount, dispatch }) {
         });
         break;
       case "destinationAmount":
-        setDestinationAmount(value);
+        // setDestinationAmount(value);
         break;
       case "originCurrency":
         setOriginCurrency(value);
@@ -204,8 +213,10 @@ function Conversion({ originAmount, dispatch }) {
 }
 
 export default connect((state, props) => {
-  const { originAmount } = state;
+  const { originAmount, destinationAmount, conversionRate } = state;
   return {
     originAmount,
+    destinationAmount,
+    conversionRate,
   };
 })(Conversion);
