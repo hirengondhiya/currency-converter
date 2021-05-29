@@ -1,41 +1,21 @@
 import { useState, useRef, useEffect } from "react";
-import axios from "axios";
-import { useDebouncedCallback } from "use-debounce";
 import { connect } from "react-redux";
 
 import FeesTable from "./FeesTable";
+import * as actions from "../store/actions";
 function Conversion({
   originAmount,
   destinationAmount,
   conversionRate,
   dispatch,
+  feeAmount,
+  totalCost,
 }) {
   const originAmountInputRef = useRef(null);
-  // const [originAmount, setOriginAmount] = useState("0.00");
-  // const [destinationAmount, setDestinationAmount] = useState("0.00");
   const [originCurrency, setOriginCurrency] = useState("USD");
   const [destinationCurrency, setDestinationCurrency] = useState("EUR");
-  // const [conversionRate, setConversionRate] = useState(1.5);
-  const [changedField, setChangedField] = useState("");
-  const [feeAmount, setFeeAmount] = useState(0.0);
-  const [totalCost, setTotalCost] = useState(0.0);
+
   const [errorMsg, setErrorMsg] = useState("");
-
-  const makeConversionAjaxCall = useDebouncedCallback(
-    _makeConversionAjaxCall,
-    350
-  );
-  const makeFeeAjaxCall = useDebouncedCallback(_makeFeeAjaxCall, 350);
-  // we'll handle all failures the same
-  function handleAjaxFailure(resp) {
-    var msg = "Error. Please try again later.";
-
-    if (resp && resp.request && resp.request.status === 0) {
-      msg = "Oh no! App appears to be offline.";
-    }
-
-    setErrorMsg(msg);
-  }
 
   useEffect(() => {
     originAmountInputRef.current.focus();
@@ -45,83 +25,26 @@ function Conversion({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  useEffect(() => {
-    dispatch((dispatch) => {
-      if (changedField) {
-        setChangedField("");
-        const payload = {
-          originAmount: originAmount,
-          destAmount: destinationAmount,
-          originCurrency: originCurrency,
-          destCurrency: destinationCurrency,
-          calcOriginAmount: changedField.includes("destinationAmount"),
-        };
-        dispatch({ type: "REQ_CONVERSION", data: payload });
-        makeConversionAjaxCall(
-          payload,
-          (resp) => {
-            dispatch({ type: "REC_CONVERSION", data: resp });
-            if (errorMsg) {
-              setErrorMsg("");
-            }
-            const {
-              originAmount: newOriginAmount,
-              destAmount: newDestinationAmount,
-              xRate: newConversionRate,
-            } = resp || {};
-            if (changedField.includes("destinationAmount")) {
-              // setOriginAmount(newOriginAmount);
-              dispatch({
-                type: "SET_ORIGIN_AMT",
-                data: newOriginAmount,
-              });
-            } else {
-              // setDestinationAmount(newDestinationAmount);
-            }
-            // setConversionRate(newConversionRate);
-          },
-          handleAjaxFailure
-        );
-      }
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [changedField]);
-
-  useEffect(() => {
-    makeFeeAjaxCall(
-      {
-        originAmount: originAmount,
-        originCurrency: originCurrency,
-        destCurrency: destinationCurrency,
-      },
-      (feeResp) => {
-        if (errorMsg) {
-          setErrorMsg("");
-        }
-        setFeeAmount(feeResp.feeAmount);
-      },
-      handleAjaxFailure
-    );
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [originAmount, originCurrency, destinationCurrency]);
-
-  useEffect(() => {
-    const newTotal = parseFloat(originAmount, 10) + parseFloat(feeAmount, 10);
-    setTotalCost(parseFloat(newTotal));
-  }, [originAmount, feeAmount]);
-
+  function setZeroForEmpty(value) {
+    return value || "0.0";
+  }
   function handleChange(e) {
+    let dispatchConversion = true;
+    let dispatchFees = true;
     const { name, value } = e.target;
     switch (name) {
       case "originAmount":
-        // setOriginAmount(value);
         dispatch({
           type: "SET_ORIGIN_AMT",
-          data: value,
+          data: setZeroForEmpty(value),
         });
         break;
       case "destinationAmount":
-        // setDestinationAmount(value);
+        dispatchFees = false;
+        dispatch({
+          type: "SET_DESTINATION_AMT",
+          data: setZeroForEmpty(value),
+        });
         break;
       case "originCurrency":
         setOriginCurrency(value);
@@ -130,31 +53,28 @@ function Conversion({
         setDestinationCurrency(value);
         break;
       default:
+        dispatchFees = false;
+        dispatchConversion = false;
         console.log(`Unknown field ${name}`);
     }
-    setChangedField(name);
-  }
-
-  // this is debounced in `componentDidMount()` as this.makeConversionAjaxCall()
-  function _makeConversionAjaxCall(payload, successCallback, failureCallback) {
-    axios
-      .get("http://localhost:3005/api/conversion", {
-        params: payload,
-      })
-      .then((resp) => {
-        successCallback(resp.data);
-      })
-      .catch(failureCallback);
-  }
-  function _makeFeeAjaxCall(payload, successCallback, failureCallback) {
-    axios
-      .get("http://localhost:3005/api/fees", {
-        params: payload,
-      })
-      .then((resp) => {
-        successCallback(resp.data);
-      })
-      .catch(failureCallback);
+    if (dispatchConversion) {
+      const payload = {
+        originAmount: setZeroForEmpty(value),
+        destAmount: setZeroForEmpty(value),
+        originCurrency: originCurrency,
+        destCurrency: destinationCurrency,
+        calcOriginAmount: name.includes("destinationAmount"),
+      };
+      dispatch(actions.fetchConversionRate(payload));
+    }
+    if (dispatchFees) {
+      const feesPayload = {
+        originAmount: setZeroForEmpty(value),
+        originCurrency: originCurrency,
+        destCurrency: destinationCurrency,
+      };
+      dispatch(actions.fetchFees(feesPayload));
+    }
   }
 
   return (
@@ -166,14 +86,12 @@ function Conversion({
         className="amount-field"
         ref={originAmountInputRef}
         onChange={handleChange}
-        // onChange={handleOriginAmountChange}
         value={originAmount}
       />
       <select
         name="originCurrency"
         value={originCurrency}
         onChange={handleChange}
-        // onChange={handleOriginCurrencyChange}
       >
         <option value="USD">USD</option>
         <option value="EUR">EUR</option>
@@ -184,7 +102,6 @@ function Conversion({
         name="destinationAmount"
         className="amount-field"
         onChange={handleChange}
-        // onChange={handleDestAmountChange}
         value={destinationAmount}
       />
       &nbsp;
@@ -192,7 +109,6 @@ function Conversion({
         name="destinationCurrency"
         value={destinationCurrency}
         onChange={handleChange}
-        // onChange={handleDestCurrencyChange}
       >
         <option value="USD">USD</option>
         <option value="EUR">EUR</option>
@@ -213,10 +129,18 @@ function Conversion({
 }
 
 export default connect((state, props) => {
-  const { originAmount, destinationAmount, conversionRate } = state;
+  const {
+    originAmount,
+    destinationAmount,
+    conversionRate,
+    feeAmount,
+    totalCost,
+  } = state;
   return {
     originAmount,
     destinationAmount,
     conversionRate,
+    feeAmount,
+    totalCost,
   };
 })(Conversion);
