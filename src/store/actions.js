@@ -1,8 +1,9 @@
 import axios from "axios";
 import { debounce } from "lodash";
+import { ACTION_TYPES } from "./constants";
 export function changeOriginAmount(value) {
   return {
-    type: "SET_ORIGIN_AMT",
+    type: ACTION_TYPES.SET_ORIGIN_AMT,
     data: value,
   };
 }
@@ -15,7 +16,7 @@ export function fetchConversionRate(payload) {
 
 function _makeConversionAjaxCall(dispatch, payload) {
   dispatch({
-    type: "REQ_CONVERSION",
+    type: ACTION_TYPES.REQ_CONVERSION,
     data: payload,
   });
 
@@ -25,12 +26,12 @@ function _makeConversionAjaxCall(dispatch, payload) {
     })
     .then((resp) => {
       dispatch({
-        type: "REC_CONVERSION_SUCCESS",
+        type: ACTION_TYPES.REC_CONVERSION_SUCCESS,
         data: resp.data,
       });
       if (payload.calcOriginAmount) {
         dispatch({
-          type: "SET_ORIGIN_AMT",
+          type: ACTION_TYPES.SET_ORIGIN_AMT,
           data: resp.data.originAmount,
         });
         dispatch(
@@ -40,7 +41,7 @@ function _makeConversionAjaxCall(dispatch, payload) {
     })
     .catch((err) => {
       dispatch({
-        type: "REC_CONVERSION_FAILURE",
+        type: ACTION_TYPES.REC_CONVERSION_FAILURE,
         data: err,
       });
     });
@@ -56,7 +57,7 @@ export function fetchFees(payload) {
 
 function _makeFeeAjaxCall(dispatch, payload) {
   dispatch({
-    type: "REQ_FEES",
+    type: ACTION_TYPES.REQ_FEES,
     data: payload,
   });
 
@@ -66,13 +67,13 @@ function _makeFeeAjaxCall(dispatch, payload) {
     })
     .then((resp) => {
       dispatch({
-        type: "REC_FEES_SUCCESS",
+        type: ACTION_TYPES.REC_FEES_SUCCESS,
         data: resp.data,
       });
     })
     .catch((err) => {
       dispatch({
-        type: "REC_FEES_FAILURE",
+        type: ACTION_TYPES.REC_FEES_FAILURE,
         data: err,
       });
     });
