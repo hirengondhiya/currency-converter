@@ -6,14 +6,16 @@ import * as actions from "../store/actions";
 function Conversion({
   originAmount,
   destinationAmount,
+  originCurrency,
+  destinationCurrency,
   conversionRate,
   dispatch,
   feeAmount,
   totalCost,
 }) {
   const originAmountInputRef = useRef(null);
-  const [originCurrency, setOriginCurrency] = useState("USD");
-  const [destinationCurrency, setDestinationCurrency] = useState("EUR");
+  // const [originCurrency, setOriginCurrency] = useState("USD");
+  // const [destinationCurrency, setDestinationCurrency] = useState("EUR");
 
   const [errorMsg, setErrorMsg] = useState("");
 
@@ -38,23 +40,17 @@ function Conversion({
     const newCurrency = name.toLowerCase().includes("currency") && value;
     switch (name) {
       case "originAmount":
-        dispatch({
-          type: "SET_ORIGIN_AMT",
-          data: newAmount,
-        });
+        dispatch(actions.changeOriginAmount(newAmount));
         break;
       case "destinationAmount":
         dispatchFees = false;
-        dispatch({
-          type: "SET_DESTINATION_AMT",
-          data: newAmount,
-        });
+        dispatch(actions.changeDestinationAmount(newAmount));
         break;
       case "originCurrency":
-        setOriginCurrency(newCurrency);
+        dispatch(actions.changeOriginCurrency(newCurrency));
         break;
       case "destinationCurrency":
-        setDestinationCurrency(newCurrency);
+        dispatch(actions.changeDestinationCurrency(newCurrency));
         break;
       default:
         dispatchFees = false;

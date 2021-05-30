@@ -7,6 +7,24 @@ export function changeOriginAmount(value) {
     data: value,
   };
 }
+export function changeDestinationAmount(value) {
+  return {
+    type: ACTION_TYPES.SET_DESTINATION_AMT,
+    data: value,
+  };
+}
+export function changeOriginCurrency(value) {
+  return {
+    type: ACTION_TYPES.SET_ORIGIN_CURR,
+    data: value,
+  };
+}
+export function changeDestinationCurrency(value) {
+  return {
+    type: ACTION_TYPES.SET_DESTINATION_CURR,
+    data: value,
+  };
+}
 
 export function fetchConversionRate(payload) {
   return (dispatch) => {
@@ -30,18 +48,12 @@ function _makeConversionAjaxCall(dispatch, payload) {
         data: resp.data,
       });
       if (payload.calcOriginAmount) {
-        dispatch({
-          type: ACTION_TYPES.SET_ORIGIN_AMT,
-          data: resp.data.originAmount,
-        });
+        dispatch(changeOriginAmount(resp.data.originAmount));
         dispatch(
           fetchFees({ ...payload, originAmount: resp.data.originAmount })
         );
       } else {
-        dispatch({
-          type: ACTION_TYPES.SET_DESTINATION_AMT,
-          data: resp.data.destAmount,
-        });
+        dispatch(changeDestinationAmount(resp.data.destAmount));
       }
     })
     .catch((err) => {
