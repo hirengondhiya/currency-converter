@@ -37,6 +37,11 @@ function _makeConversionAjaxCall(dispatch, payload) {
         dispatch(
           fetchFees({ ...payload, originAmount: resp.data.originAmount })
         );
+      } else {
+        dispatch({
+          type: ACTION_TYPES.SET_DESTINATION_AMT,
+          data: resp.data.destAmount,
+        });
       }
     })
     .catch((err) => {

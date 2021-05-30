@@ -32,25 +32,29 @@ function Conversion({
     let dispatchConversion = true;
     let dispatchFees = true;
     const { name, value } = e.target;
+    const newAmount =
+      name.toLowerCase().includes("amount") && setZeroForEmpty(value);
+
+    const newCurrency = name.toLowerCase().includes("currency") && value;
     switch (name) {
       case "originAmount":
         dispatch({
           type: "SET_ORIGIN_AMT",
-          data: setZeroForEmpty(value),
+          data: newAmount,
         });
         break;
       case "destinationAmount":
         dispatchFees = false;
         dispatch({
           type: "SET_DESTINATION_AMT",
-          data: setZeroForEmpty(value),
+          data: newAmount,
         });
         break;
       case "originCurrency":
-        setOriginCurrency(value);
+        setOriginCurrency(newCurrency);
         break;
       case "destinationCurrency":
-        setDestinationCurrency(value);
+        setDestinationCurrency(newCurrency);
         break;
       default:
         dispatchFees = false;
@@ -59,17 +63,20 @@ function Conversion({
     }
     if (dispatchConversion) {
       const payload = {
-        originAmount: setZeroForEmpty(value),
-        destAmount: setZeroForEmpty(value),
-        originCurrency: originCurrency,
-        destCurrency: destinationCurrency,
+        originAmount: newAmount || originAmount,
+        destAmount: newAmount || destinationAmount,
+        originCurrency:
+          (name === "originCurrency" && newCurrency) || originCurrency,
+        destCurrency:
+          (name === "destinationCurrency" && newCurrency) ||
+          destinationCurrency,
         calcOriginAmount: name.includes("destinationAmount"),
       };
       dispatch(actions.fetchConversionRate(payload));
     }
     if (dispatchFees) {
       const feesPayload = {
-        originAmount: setZeroForEmpty(value),
+        originAmount: newAmount || originAmount,
         originCurrency: originCurrency,
         destCurrency: destinationCurrency,
       };
@@ -129,18 +136,7 @@ function Conversion({
 }
 
 export default connect((state, props) => {
-  const {
-    originAmount,
-    destinationAmount,
-    conversionRate,
-    feeAmount,
-    totalCost,
-  } = state;
   return {
-    originAmount,
-    destinationAmount,
-    conversionRate,
-    feeAmount,
-    totalCost,
+    ...state.amount,
   };
 })(Conversion);
