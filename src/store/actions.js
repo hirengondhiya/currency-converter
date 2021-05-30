@@ -56,10 +56,11 @@ function _makeConversionAjaxCall(dispatch, payload) {
         dispatch(changeDestinationAmount(resp.data.destAmount));
       }
     })
-    .catch((err) => {
+    .catch((resp) => {
+      const msg = getErrorMsg(resp);
       dispatch({
         type: ACTION_TYPES.REC_CONVERSION_FAILURE,
-        data: err,
+        data: { msg, failedCall: "conversion" },
       });
     });
 }
@@ -88,12 +89,24 @@ function _makeFeeAjaxCall(dispatch, payload) {
         data: resp.data,
       });
     })
-    .catch((err) => {
+    .catch((resp) => {
+      const msg = getErrorMsg(resp);
+
       dispatch({
         type: ACTION_TYPES.REC_FEES_FAILURE,
-        data: err,
+        data: { msg, failedCall: "fees" },
       });
     });
 }
 
 const makeFeesAjaxCall = debounce(_makeFeeAjaxCall, 300);
+
+function getErrorMsg(resp) {
+  let msg = "Error. Please try again later.";
+
+  if (resp && resp.request && resp.request.status === 0) {
+    msg = "Oh no! App appears to be offline.";
+  }
+
+  return msg;
+}

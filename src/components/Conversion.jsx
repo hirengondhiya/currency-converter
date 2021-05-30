@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useRef, useEffect } from "react";
 import { connect } from "react-redux";
 
 import FeesTable from "./FeesTable";
@@ -12,18 +12,16 @@ function Conversion({
   dispatch,
   feeAmount,
   totalCost,
+  errorMsg,
 }) {
   const originAmountInputRef = useRef(null);
   // const [originCurrency, setOriginCurrency] = useState("USD");
   // const [destinationCurrency, setDestinationCurrency] = useState("EUR");
 
-  const [errorMsg, setErrorMsg] = useState("");
+  // const [errorMsg, setErrorMsg] = useState("");
 
   useEffect(() => {
     originAmountInputRef.current.focus();
-    if (errorMsg) {
-      setErrorMsg("");
-    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -134,5 +132,6 @@ function Conversion({
 export default connect((state, props) => {
   return {
     ...state.amount,
+    ...state.errorMessage,
   };
 })(Conversion);
